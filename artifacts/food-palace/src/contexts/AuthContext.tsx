@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token,
     login,
     logout,
-    isAdmin: user?.role === "admin",
+    isAdmin: ["super_admin", "admin", "staff", "kitchen_staff"].includes(user?.role ?? ""),
     isLoggedIn: !!user,
     isLoading
   };
