@@ -56,45 +56,47 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  /* Slate background, warm accents */
-  --background: 210 20% 98%; /* Slate 50 */
-  --foreground: 222 47% 11%; /* Slate 900 */
-  --border: 214 32% 91%; /* Slate 200 */
-  
+  /* Blue & Ash palette */
+  --background: 220 20% 97%;
+  --foreground: 222 47% 11%;
+  --border: 220 13% 88%;
+
   --card: 0 0% 100%;
   --card-foreground: 222 47% 11%;
-  --card-border: 214 32% 91%;
+  --card-border: 220 13% 88%;
 
-  --sidebar: 0 0% 100%;
-  --sidebar-foreground: 222 47% 11%;
-  --sidebar-border: 214 32% 91%;
-  --sidebar-primary: 32 95% 44%;
+  --sidebar: 220 30% 15%;
+  --sidebar-foreground: 220 20% 92%;
+  --sidebar-border: 220 25% 22%;
+  --sidebar-primary: 217 91% 60%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 210 40% 96%;
-  --sidebar-accent-foreground: 222 47% 11%;
-  --sidebar-ring: 214 32% 91%;
+  --sidebar-accent: 220 25% 22%;
+  --sidebar-accent-foreground: 220 20% 92%;
+  --sidebar-ring: 217 91% 60%;
 
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
-  --popover-border: 214 32% 91%;
+  --popover-border: 220 13% 88%;
 
-  --primary: 32 95% 44%; /* Warm Amber/Orange */
+  /* Blue primary */
+  --primary: 217 91% 54%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 213 27% 84%; /* Slate 200 */
+  /* Ash secondary */
+  --secondary: 220 13% 91%;
   --secondary-foreground: 222 47% 11%;
 
-  --muted: 210 40% 96%; /* Slate 100 */
-  --muted-foreground: 215 16% 47%; /* Slate 500 */
+  --muted: 220 14% 95%;
+  --muted-foreground: 220 9% 46%;
 
-  --accent: 210 40% 96%;
-  --accent-foreground: 222 47% 11%;
+  --accent: 217 35% 93%;
+  --accent-foreground: 217 91% 30%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 214 32% 91%;
-  --ring: 32 95% 44%;
+  --input: 220 13% 88%;
+  --ring: 217 91% 54%;
 
   --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
@@ -117,44 +119,44 @@
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  --background: 222 47% 11%; /* Slate 900 */
-  --foreground: 210 40% 98%; /* Slate 50 */
-  --border: 217 33% 17%; /* Slate 800 */
-  
-  --card: 222 47% 11%;
-  --card-foreground: 210 40% 98%;
-  --card-border: 217 33% 17%;
+  --background: 222 47% 9%;
+  --foreground: 220 20% 95%;
+  --border: 220 25% 18%;
 
-  --sidebar: 222 47% 11%;
-  --sidebar-foreground: 210 40% 98%;
-  --sidebar-border: 217 33% 17%;
-  --sidebar-primary: 32 95% 44%;
+  --card: 222 40% 12%;
+  --card-foreground: 220 20% 95%;
+  --card-border: 220 25% 18%;
+
+  --sidebar: 222 45% 8%;
+  --sidebar-foreground: 220 20% 92%;
+  --sidebar-border: 220 25% 15%;
+  --sidebar-primary: 217 91% 60%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 217 33% 17%;
-  --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 217 33% 17%;
+  --sidebar-accent: 220 25% 16%;
+  --sidebar-accent-foreground: 220 20% 92%;
+  --sidebar-ring: 217 91% 60%;
 
-  --popover: 222 47% 11%;
-  --popover-foreground: 210 40% 98%;
-  --popover-border: 217 33% 17%;
+  --popover: 222 40% 12%;
+  --popover-foreground: 220 20% 95%;
+  --popover-border: 220 25% 18%;
 
-  --primary: 32 95% 44%; /* Warm Amber/Orange */
+  --primary: 217 91% 60%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 217 33% 17%;
-  --secondary-foreground: 210 40% 98%;
+  --secondary: 220 25% 18%;
+  --secondary-foreground: 220 20% 95%;
 
-  --muted: 217 33% 17%;
-  --muted-foreground: 215 20% 65%; /* Slate 400 */
+  --muted: 220 25% 16%;
+  --muted-foreground: 220 14% 58%;
 
-  --accent: 217 33% 17%;
-  --accent-foreground: 210 40% 98%;
+  --accent: 217 35% 20%;
+  --accent-foreground: 217 91% 75%;
 
-  --destructive: 0 62% 30%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive: 0 62% 45%;
+  --destructive-foreground: 0 0% 100%;
 
-  --input: 217 33% 17%;
-  --ring: 32 95% 44%;
+  --input: 220 25% 18%;
+  --ring: 217 91% 60%;
 }
 
 @layer base {
@@ -165,4 +167,9 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+}
+
+/* Bottom nav safe area */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
