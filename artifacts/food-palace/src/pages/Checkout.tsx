@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -66,13 +66,18 @@ export default function Checkout() {
   
   const paymentMethod = form.watch("paymentMethod");
 
+  useEffect(() => {
+    if (!loadingCart && (!cart || cart.items.length === 0)) {
+      setLocation("/cart");
+    }
+  }, [cart, loadingCart, setLocation]);
+
   if (loadingCart || loadingZones) {
     return <div className="p-8 text-center">Loading checkout...</div>;
   }
 
   if (!cart || cart.items.length === 0) {
-    setLocation("/cart");
-    return null;
+    return <div className="p-8 text-center">Redirecting...</div>;
   }
 
   const onSubmit = (values: CheckoutFormValues) => {

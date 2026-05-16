@@ -9,6 +9,7 @@ import ordersRouter from "./orders";
 import favoritesRouter from "./favorites";
 import settingsRouter from "./settings";
 import analyticsRouter from "./analytics";
+import adminOrdersRouter from "./admin-orders";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use("/orders", ordersRouter);
 router.use("/favorites", favoritesRouter);
 router.use(settingsRouter);
 router.use(analyticsRouter);
+router.use(adminOrdersRouter);
 
 export default router;

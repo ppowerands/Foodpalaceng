@@ -6,7 +6,7 @@ import { requireAuth, requireAdmin, AuthRequest } from "../lib/auth.js";
 
 const router = Router();
 
-async function buildOrderResponse(order: typeof ordersTable.$inferSelect) {
+export async function buildOrderResponse(order: typeof ordersTable.$inferSelect) {
   const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, order.id));
   const [user] = await db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, order.userId)).limit(1);
   let deliveryZoneName: string | null = null;
@@ -157,44 +157,6 @@ router.post("/:id/confirm-payment", requireAuth, async (req: AuthRequest, res) =
     return res.json(await buildOrderResponse(updated));
   } catch {
     return res.status(500).json({ error: "Failed to confirm payment" });
-  }
-});
-
-// Admin routes
-router.get("/admin/orders", requireAdmin, async (req, res) => {
-  try {
-    const { status, paymentStatus } = req.query;
-    let query = db.select().from(ordersTable).orderBy(desc(ordersTable.createdAt));
-    const orders = await query;
-    let filtered = orders;
-    if (status) filtered = filtered.filter((o) => o.status === status);
-    if (paymentStatus) filtered = filtered.filter((o) => o.paymentStatus === paymentStatus);
-    const result = await Promise.all(filtered.map(buildOrderResponse));
-    return res.json(result);
-  } catch {
-    return res.status(500).json({ error: "Failed to list orders" });
-  }
-});
-
-router.patch("/admin/orders/:id/status", requireAdmin, async (req, res) => {
-  try {
-    const id = parseInt(req.params["id"]!);
-    const { status } = req.body;
-    const [order] = await db.update(ordersTable).set({ status }).where(eq(ordersTable.id, id)).returning();
-    return res.json(await buildOrderResponse(order));
-  } catch {
-    return res.status(500).json({ error: "Failed to update order status" });
-  }
-});
-
-router.patch("/admin/orders/:id/payment-status", requireAdmin, async (req, res) => {
-  try {
-    const id = parseInt(req.params["id"]!);
-    const { paymentStatus } = req.body;
-    const [order] = await db.update(ordersTable).set({ paymentStatus }).where(eq(ordersTable.id, id)).returning();
-    return res.json(await buildOrderResponse(order));
-  } catch {
-    return res.status(500).json({ error: "Failed to update payment status" });
   }
 });
 
