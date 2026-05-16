@@ -1,0 +1,465 @@
+Create a COMPLETE modern full-stack Nigerian restaurant ordering platform called:
+
+FOOD PALACE RESTAURANT
+
+IMPORTANT:
+This is a REAL production-style restaurant platform, not a demo landing page.
+
+Build a clean scalable project with:
+- frontend
+- backend
+- database
+- admin dashboard
+- ordering system
+- authentication system
+- deployment-ready structure
+
+Use:
+- Next.js
+- Node.js + Express
+- PostgreSQL
+- Prisma ORM
+- Tailwind CSS
+- JWT Authentication
+
+The project MUST properly connect:
+Frontend ↔ Backend API ↔ Database
+
+Fix CORS automatically and ensure all APIs work correctly.
+
+====================================
+MAIN GOAL
+====================================
+
+Build a responsive Nigerian restaurant ordering website where customers can:
+- browse meals
+- add food to cart
+- place orders
+- choose delivery locations
+- pay with bank transfer or cash on delivery
+- track orders
+
+Also create a full admin dashboard for restaurant management.
+
+====================================
+MENU CATEGORIES
+====================================
+
+Use ONLY these categories:
+
+- Main Meals
+- Burgers & Shawarma
+- Soups & Swallow
+- Sides
+- Drinks
+- Desserts
+
+Remove all pizza-related items completely.
+
+====================================
+MAIN MEALS
+====================================
+
+Add sample meals:
+- Jollof Rice
+- Fried Rice
+- White Rice & Stew
+- Rice & Chicken
+- Rice & Turkey
+- Spaghetti
+
+====================================
+BURGERS & SHAWARMA
+====================================
+
+Create advanced customizable ordering system.
+
+SHAWARMA ITEMS:
+- Beef Shawarma
+- Chicken Shawarma
+
+Each shawarma item must support sizes:
+- Small
+- Medium
+- Large
+- Jumbo
+
+Each size must support:
+- different prices
+- optional add-ons
+- live price updates
+
+Example:
+Chicken Shawarma:
+- Small — ₦2500
+- Medium — ₦3500
+- Large — ₦4500
+- Jumbo — ₦6000
+
+BURGER ITEMS:
+- Single Decker Burger
+- Double Decker Burger
+- Single Decker Burger with Cheese
+- Double Decker Burger with Cheese
+
+Allow:
+- extra cheese
+- extra sauce
+- quantity selection
+
+====================================
+SOUPS & SWALLOW
+====================================
+
+SOUPS:
+- Egusi Soup
+- Miyan Kuka (Baobab Soup)
+- Okra Soup
+- Vegetable Soup
+
+SWALLOW OPTIONS:
+- Tuwo
+- Eba
+- Pounded Yam
+
+Allow users to combine:
+- soup
+- swallow
+- extra protein
+
+====================================
+SIDES
+====================================
+
+Include:
+- Chicken
+- Turkey
+- Plantain
+- Fries
+- Moi Moi
+
+====================================
+DRINKS
+====================================
+
+Include:
+- Soft Drinks
+- Water
+- Juice
+- Milkshakes
+
+====================================
+DESSERTS
+====================================
+
+Include:
+- Ice Cream
+- Cake
+- Doughnuts
+
+====================================
+CUSTOMER FEATURES
+====================================
+
+Customers should be able to:
+- Create account/login
+- Browse menu
+- Search meals
+- Filter by category
+- Add to cart
+- Increase/decrease quantity
+- Remove cart items
+- Favorite meals
+- Checkout
+- Enter delivery address
+- Select delivery location
+- Choose payment method
+- Track order status
+- View previous orders
+- Contact support
+
+====================================
+DELIVERY SYSTEM
+====================================
+
+Create delivery fee system based on delivery zones.
+
+Customer should:
+- enter full delivery address
+- select nearest area/location
+
+Nearby locations should share same delivery fee.
+
+Example:
+
+ZONE A — ₦1000
+- Unguwan Dosa
+- Kawo
+
+ZONE B — ₦1500
+- Barnawa
+- Kakuri
+
+ZONE C — ₦2000
+- Sabon Tasha
+- Ungwan Rimi
+
+When customer selects location:
+- delivery fee updates automatically
+- total cart price updates live
+
+====================================
+PAYMENT SYSTEM
+====================================
+
+Payment methods:
+- Cash on Delivery
+- Bank Transfer
+
+When customer selects Bank Transfer:
+
+Display:
+BANK NAME:
+MONIEPOINT MFB
+
+ACCOUNT NAME:
+USMAN SAMBO MARAFA
+
+ACCOUNT NUMBER:
+9110064364
+
+Customer flow:
+1. Customer places order
+2. Selects Bank Transfer
+3. Bank details appear
+4. Customer makes transfer
+5. Customer taps:
+   “I Have Made Payment”
+6. Order status becomes:
+   “Awaiting Confirmation”
+
+====================================
+ADMIN PAYMENT MANAGEMENT
+====================================
+
+Admin should:
+- View pending transfer payments
+- Confirm/reject transfers manually
+- Update payment status
+- Update order status
+
+PAYMENT STATUSES:
+- Awaiting Confirmation
+- Payment Confirmed
+- Payment Rejected
+
+ORDER STATUSES:
+- Pending
+- Preparing
+- Out for Delivery
+- Delivered
+- Cancelled
+
+====================================
+ADMIN DASHBOARD
+====================================
+
+Create secure admin dashboard.
+
+Admin must be able to:
+- Login securely
+- Add/edit/delete categories
+- Add/edit/delete products
+- Add/edit/delete variants
+- Add/edit/delete sizes
+- Manage add-ons
+- Upload food images
+- Change prices dynamically
+- Manage delivery zones
+- Edit delivery fees
+- Confirm payments
+- View customer orders
+- Update order statuses
+- Enable/disable products
+- View analytics:
+  - total sales
+  - daily orders
+  - revenue charts
+  - best-selling meals
+
+IMPORTANT:
+Do NOT hardcode menu data.
+Everything must remain editable from admin dashboard.
+
+====================================
+DATABASE REQUIREMENTS
+====================================
+
+Create PostgreSQL schema/models for:
+- Users
+- Admins
+- Categories
+- Products
+- Product Variants
+- Product Sizes
+- Add-ons
+- Orders
+- Order Items
+- Payments
+- Delivery Zones
+- Delivery Addresses
+- Favorites/Wishlist
+- Notifications
+
+Use Prisma migrations correctly.
+
+====================================
+AUTHENTICATION & SECURITY
+====================================
+
+Include:
+- JWT authentication
+- encrypted passwords
+- role-based admin protection
+- secure API routes
+- input validation
+- error handling
+
+Include:
+- forgot password functionality
+- email reset link structure
+- reset token system
+
+====================================
+UI / DESIGN REQUIREMENTS
+====================================
+
+Style:
+- Luxury modern Nigerian restaurant aesthetic
+- Blue and ash color theme
+- Smooth animations
+- Sticky navigation
+- Beautiful food cards
+- Glassmorphism UI
+- Mobile-first responsive design
+- Dark/light mode
+- Toast notifications
+- Loading skeletons
+
+====================================
+EXTRA FEATURES
+====================================
+
+Add:
+- WhatsApp support button
+- QR code menu support
+- Google Maps embed
+- SEO optimization
+- PWA support
+- Email notification structure
+- Mobile app-ready architecture
+
+====================================
+DEPLOYMENT & GITHUB
+====================================
+
+Prepare project for:
+- GitHub repository
+- Public deployment
+- Vercel
+- Railway
+- Render
+
+Generate:
+- README.md
+- .gitignore
+- Environment variable examples
+- Installation guide
+- Deployment instructions
+- API documentation
+
+IMPORTANT:
+Remove ALL Replit branding and watermark elements from the frontend UI.
+
+Remove:
+- “Made with Replit”
+- Replit badges
+- Replit footer branding
+
+====================================
+FINAL REQUIREMENTS
+====================================
+
+After generation:
+1. Install dependencies
+2. Run database migrations
+3. Start backend server
+4. Start frontend server
+5. Test frontend ↔ backend ↔ database communication
+6. Fix build errors automatically
+7. Ensure application runs successfully
+8. Ensure all pages are connected properly
+9. Ensure admin dashboard works correctly
+10. Ensure cart and checkout system work correctly
+
+Do NOT stop at static UI generation.
+Build the REAL full-stack implementation.
+
+====================================
+ADDITIONAL PROFESSIONAL FEATURES
+====================================
+
+RESTAURANT OPEN/CLOSED SYSTEM:
+- Admin can set restaurant opening and closing hours
+- Website should automatically show:
+  “Open” or “Currently Closed”
+- Disable checkout when restaurant is closed
+
+ESTIMATED DELIVERY TIME:
+- Show estimated delivery time during checkout
+- Example:
+  “Estimated delivery: 35–45 mins”
+
+ADMIN ORDER NOTIFICATIONS:
+- Play notification sound for new orders
+- Show popup notification in admin dashboard
+- Show unread order badge count
+
+WHATSAPP ORDER BACKUP:
+- Generate WhatsApp order summary automatically after order placement
+- Include customer order details and delivery information
+- Add WhatsApp support/contact button
+
+STOCK MANAGEMENT:
+- Admin can mark products as:
+  - In Stock
+  - Out of Stock
+- Out of stock meals should not be orderable
+
+DELIVERY NOTES:
+- Customer can add delivery instructions
+- Example:
+  “Call when outside gate”
+
+ADMIN ROLE SYSTEM:
+Support multiple admin roles:
+- Super Admin
+- Staff
+- Kitchen Staff
+
+IMAGE OPTIMIZATION:
+- Compress uploaded food images automatically
+- Optimize images for faster website loading
+
+====================================
+DEMO / SEED DATABASE
+====================================
+
+Create automatic demo seed data for:
+- menu categories
+- meals
+- product variants
+- delivery zones
+- admin account
+
+Ensure database is automatically populated with sample data after migrations for easier testing and development.
