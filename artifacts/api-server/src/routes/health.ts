@@ -1,13 +1,9 @@
-// @ts-ignore-file
-import { Router, type IRouter } from "express";
-import { HealthCheckResponse } from "@workspace/api-zod";
+import { Router } from "express";
 
-const router: IRouter = Router();
+const router = Router();
 
-//@ts-ignore
-router.get("/healthz", (_req: any, res: any) => {
-  const data = HealthCheckResponse.parse({ status: "ok" });
-  res.json(data);
+router.get("/healthz", (req: any, res: any) => {
+  res.json({ status: "ok" });
 });
 
 export default router;
