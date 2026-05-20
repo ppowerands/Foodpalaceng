@@ -33,7 +33,7 @@ router.post("/", requireAdmin, async (req, res) => {
 
 router.patch("/:id", requireAdmin, async (req, res) => {
   try {
-    const id = parseInt(req.params["id"]!);
+    const id = parseInt(String(req.params["id"]));
     const { name, slug, description, imageUrl, sortOrder } = req.body;
     const [cat] = await db.update(categoriesTable).set({ name, slug, description, imageUrl, sortOrder }).where(eq(categoriesTable.id, id)).returning();
     return res.json({ ...cat, productCount: 0 });
