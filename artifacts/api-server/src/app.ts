@@ -7,15 +7,18 @@ import { logger } from "./lib/logger";
 const app: Express = express();
 
 app.use(
+//@ts-ignore
   (pinoHttp as any)({
     logger,
     serializers: {
+//@ts-ignore
       req(req: any) {
         return {
           id: req.id,
           method: req.method,
           url: req.url?.split("?")[0],
         };
+//@ts-ignore
       },
       res(res: any) {
         return {
