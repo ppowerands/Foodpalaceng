@@ -44,8 +44,10 @@ router.patch("/:id", requireAdmin, async (req, res) => {
 
 router.delete("/:id", requireAdmin, async (req, res) => {
   try {
-    parseInt(String(req.params["id"]))
+    const id = parseInt(String(req.params["id"]));
+
     await db.delete(categoriesTable).where(eq(categoriesTable.id, id));
+
     return res.status(204).send();
   } catch {
     return res.status(500).json({ error: "Failed to delete category" });
