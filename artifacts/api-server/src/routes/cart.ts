@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "../../../lib/db/src/index.js";
+import { db } from "../lib/db";
 import {
   cartItemsTable,
   productsTable,
