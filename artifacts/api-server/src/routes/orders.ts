@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { db } from "../../../lib/db/src/index.js";
 import {
+  db,
   ordersTable,
   orderItemsTable,
   cartItemsTable,
@@ -9,7 +9,7 @@ import {
   addonsTable,
   deliveryZonesTable,
   usersTable,
-} from "@workspace/db";
+} from "../../../lib/db/src/index.js";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth, AuthRequest } from "../lib/auth.js";
 
