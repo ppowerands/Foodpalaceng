@@ -8,7 +8,7 @@ import {
   addonsTable,
   deliveryZonesTable,
   usersTable,
-} from "../../lib/db/src/index";
+} from "@workspace/db";
 
 export {
   db,
