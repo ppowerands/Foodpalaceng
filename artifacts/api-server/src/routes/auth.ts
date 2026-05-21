@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Router } from "express";
 import bcrypt from "bcryptjs";
-import { db, usersTable } from "../../../lib/db/src/index.js";
+import { db } from "../lib/db";
 import { eq } from "drizzle-orm";
 import { signToken, requireAuth, AuthRequest } from "../lib/auth.js";
 
