@@ -16,7 +16,7 @@ router.get("/", async (_req, res) => {
     return res.json(
       zones.map((z) => ({
         ...z,
-        fee: parseFloat(z.fee as unknown as string),
+        fee: parseFloat(String(z.fee)),
       }))
     );
   } catch {
@@ -40,7 +40,7 @@ router.post("/", requireAdmin, async (req, res) => {
 
     return res.status(201).json({
       ...zone,
-      fee: parseFloat(zone.fee as unknown as string),
+      fee: parseFloat(String(zone.fee)),
     });
   } catch {
     return res.status(500).json({ error: "Failed to create delivery zone" });
@@ -49,7 +49,8 @@ router.post("/", requireAdmin, async (req, res) => {
 
 router.patch("/:id", requireAdmin, async (req, res) => {
   try {
-    const id = parseInt(String(req.params["id"]));
+    const rawId = req.params["id"];
+    const id = parseInt(Array.isArray(rawId) ? rawId[0] : String(rawId));
 
     const { name, fee, areas, estimatedMinutes } = req.body;
 
@@ -68,7 +69,7 @@ router.patch("/:id", requireAdmin, async (req, res) => {
 
     return res.json({
       ...zone,
-      fee: parseFloat(zone.fee as unknown as string),
+      fee: parseFloat(String(zone.fee)),
     });
   } catch {
     return res.status(500).json({ error: "Failed to update delivery zone" });
@@ -77,7 +78,8 @@ router.patch("/:id", requireAdmin, async (req, res) => {
 
 router.delete("/:id", requireAdmin, async (req, res) => {
   try {
-    const id = parseInt(String(req.params["id"]));
+    const rawId = req.params["id"];
+    const id = parseInt(Array.isArray(rawId) ? rawId[0] : String(rawId));
 
     await db.delete(deliveryZonesTable).where(eq(deliveryZonesTable.id, id));
 
