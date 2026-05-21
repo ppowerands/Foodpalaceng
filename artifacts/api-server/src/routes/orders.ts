@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
+import { db } from "../../../lib/db/src/index.js";
 import {
   ordersTable,
   orderItemsTable,
