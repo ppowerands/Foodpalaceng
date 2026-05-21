@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
 import {
+  db,
   productsTable,
   categoriesTable,
   productVariantsTable,
   addonsTable,
   favoritesTable
-} from "@workspace/db";
+} from "../../../lib/db/src/index.js";
 import { eq, and, ilike, desc, sql } from "drizzle-orm";
 import { requireAdmin, optionalAuth, AuthRequest } from "../lib/auth.js";
 
