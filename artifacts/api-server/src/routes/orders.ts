@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {
+export {
   db,
   ordersTable,
   orderItemsTable,
@@ -9,7 +9,7 @@ import {
   addonsTable,
   deliveryZonesTable,
   usersTable,
-} from "../../../lib/db/src/index.js";
+} from "../../lib/db/src/index";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth, AuthRequest } from "../lib/auth.js";
 
