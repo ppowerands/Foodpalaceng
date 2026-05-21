@@ -5,9 +5,10 @@ import {
   categoriesTable,
   productVariantsTable,
   addonsTable,
-  favoritesTable
-} from "../../../lib/db/src/index.js";
-import { eq, and, ilike, desc, sql } from "drizzle-orm";
+  favoritesTable,
+} from "@workspace/db";
+
+import { eq, and, ilike, desc } from "drizzle-orm";
 import { requireAdmin, optionalAuth, AuthRequest } from "../lib/auth.js";
 
 const router = Router();
