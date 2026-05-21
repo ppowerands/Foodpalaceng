@@ -1,23 +1,8 @@
-import {
-  db,
-  ordersTable,
-  orderItemsTable,
-  cartItemsTable,
-  productsTable,
-  productVariantsTable,
-  addonsTable,
-  deliveryZonesTable,
-  usersTable,
-} from "@workspace/db";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 
-export {
-  db,
-  ordersTable,
-  orderItemsTable,
-  cartItemsTable,
-  productsTable,
-  productVariantsTable,
-  addonsTable,
-  deliveryZonesTable,
-  usersTable,
-};
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+export const db = drizzle(pool);
