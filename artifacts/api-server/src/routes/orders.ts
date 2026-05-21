@@ -1,6 +1,6 @@
 import { Router } from "express";
-export {
-  db,
+import { db } from "@workspace/db";
+import {
   ordersTable,
   orderItemsTable,
   cartItemsTable,
@@ -9,7 +9,8 @@ export {
   addonsTable,
   deliveryZonesTable,
   usersTable,
-} from "../../lib/db/src/index";
+} from "@workspace/db";
+
 import { eq, desc } from "drizzle-orm";
 import { requireAuth, AuthRequest } from "../lib/auth.js";
 
@@ -153,10 +154,7 @@ router.post("/", requireAuth, async (req: AuthRequest, res) => {
           addonNames = addons.filter(Boolean).map((a) => a!.name);
           addonTotal = addons
             .filter(Boolean)
-            .reduce(
-              (s, a) => s + parseFloat(String(a!.price)),
-              0
-            );
+            .reduce((s, a) => s + parseFloat(String(a!.price)), 0);
         }
 
         const unitPrice = parseFloat(String(item.unitPrice));
