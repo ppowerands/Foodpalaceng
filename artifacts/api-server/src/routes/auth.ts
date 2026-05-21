@@ -1,13 +1,11 @@
-// @ts-nocheck
 import { Router } from "express";
 import bcrypt from "bcryptjs";
-import { db } from "../lib/db";
+import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { signToken, requireAuth, AuthRequest } from "../lib/auth.js";
 
 const router = Router();
 
-//@ts-ignore
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
@@ -55,12 +53,11 @@ router.post("/register", async (req, res) => {
         role: user.role,
       },
     });
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: "Registration failed" });
   }
 });
 
-//@ts-ignore
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -124,15 +121,10 @@ router.post("/admin/login", async (req, res) => {
     ];
 
     if (!adminRoles.includes(user.role)) {
-      return res
-        .status(403)
-        .json({ error: "Not an admin account" });
+      return res.status(403).json({ error: "Not an admin account" });
     }
 
-    const valid = await bcrypt.compare(
-      password,
-      user.passwordHash,
-    );
+    const valid = await bcrypt.compare(password, user.passwordHash);
 
     if (!valid) {
       return res.status(401).json({ error: "Invalid credentials" });
