@@ -28,18 +28,14 @@ export function MainLayout({
 
   const { data: settings } = useGetPublicSettings();
 
-  const { data: cart } = useGetCart(undefined, {
-    query: {
-      enabled: isLoggedIn,
-    },
-  });
+  const { data: cart } = useGetCart();
 
   const handleLogout = () => {
     logout();
     setLocation("/");
   };
 
-  const cartCount = cart?.itemCount || 0;
+  const cartCount = isLoggedIn ? (cart?.itemCount || 0) : 0;
 
   const navLinks = [
     { href: "/", label: "Home" },
