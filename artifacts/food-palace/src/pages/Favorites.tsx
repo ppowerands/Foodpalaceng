@@ -40,7 +40,7 @@ export default function Favorites() {
   ) => {
     removeFavoriteMutation.mutate(
       {
-        id: productId,
+        productId: productId,
       },
       {
         onSuccess: () => {
