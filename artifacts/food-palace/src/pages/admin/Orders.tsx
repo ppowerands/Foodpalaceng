@@ -31,7 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 
 import { format } from "date-fns";
 
-function getStatusColor(status: string) {
+export function getStatusColor(status: string) {
   switch (status) {
     case "pending":
       return "bg-yellow-100 text-yellow-800";
@@ -53,6 +53,20 @@ function getStatusColor(status: string) {
   }
 }
 
+export function getStatusLabel(status: string) {
+  switch (status) {
+    case "pending": return "Pending";
+    case "preparing": return "Preparing";
+    case "out_for_delivery": return "Out for Delivery";
+    case "delivered": return "Delivered";
+    case "cancelled": return "Cancelled";
+    case "confirmed": return "Confirmed";
+    case "awaiting_confirmation": return "Awaiting Confirmation";
+    case "rejected": return "Rejected";
+    default: return status;
+  }
+}
+
 export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
@@ -64,9 +78,9 @@ export default function AdminOrders() {
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
 
-  const updateStatusMutation = useUpdateOrderStatus(0);
+  const updateStatusMutation = useUpdateOrderStatus();
 
-  const updatePaymentMutation = useUpdatePaymentStatus(0);
+  const updatePaymentMutation = useUpdatePaymentStatus();
 
   const handleStatusChange = (
     orderId: number,
