@@ -1,42 +1,87 @@
-import { useListFavorites, useRemoveFavorite, getListFavoritesQueryKey, useAddToCart, getGetCartQueryKey } from "@workspace/api-client-react";
+import {
+  useListFavorites,
+  useRemoveFavorite,
+  getListFavoritesQueryKey,
+  useAddToCart,
+  getGetCartQueryKey,
+} from "@workspace/api-client-react";
+
 import { ProductCard } from "@/components/ProductCard";
+
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { Heart } from "lucide-react";
+
 import { Link, useLocation } from "wouter";
+
 import { Button } from "@/components/ui/button";
+
 import { useQueryClient } from "@tanstack/react-query";
+
 import { useToast } from "@/hooks/use-toast";
 
 export default function Favorites() {
-  const { data: favorites, isLoading } = useListFavorites();
-  const removeFavoriteMutation = useRemoveFavorite();
+  const { data: favorites, isLoading } =
+    useListFavorites();
+
+  const removeFavoriteMutation =
+    useRemoveFavorite();
+
   const addToCartMutation = useAddToCart();
+
   const queryClient = useQueryClient();
+
   const { toast } = useToast();
+
   const [, setLocation] = useLocation();
 
-  const handleToggleFavorite = (productId: number) => {
-    removeFavoriteMutation.mutate(productId, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListFavoritesQueryKey() });
-        toast({ title: "Removed from favorites" });
+  const handleToggleFavorite = (
+    productId: number
+  ) => {
+    removeFavoriteMutation.mutate(
+      {
+        id: productId,
+      },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey:
+              getListFavoritesQueryKey(),
+          });
+
+          toast({
+            title: "Removed from favorites",
+          });
+        },
       }
-    });
+    );
   };
 
   const handleAddToCart = (product: any) => {
     if (product.hasVariants) {
       setLocation(`/product/${product.id}`);
+
       return;
     }
 
     addToCartMutation.mutate(
-      { data: { productId: product.id, quantity: 1 } },
+      {
+        data: {
+          productId: product.id,
+          quantity: 1,
+        },
+      },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
-          toast({ title: "Added to cart" });
-        }
+          queryClient.invalidateQueries({
+            queryKey:
+              getGetCartQueryKey(),
+          });
+
+          toast({
+            title: "Added to cart",
+          });
+        },
       }
     );
   };
@@ -44,11 +89,19 @@ export default function Favorites() {
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-12">
-        <h1 className="text-3xl font-bold mb-8">My Favorites</h1>
+        <h1 className="text-3xl font-bold mb-8">
+          My Favorites
+        </h1>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {Array(4).fill(0).map((_, i) => (
-            <Skeleton key={i} className="h-[350px] rounded-xl" />
-          ))}
+          {Array(4)
+            .fill(0)
+            .map((_, i) => (
+              <Skeleton
+                key={i}
+                className="h-[350px] rounded-xl"
+              />
+            ))}
         </div>
       </div>
     );
@@ -60,12 +113,20 @@ export default function Favorites() {
         <div className="w-24 h-24 bg-red-50 dark:bg-red-950/30 rounded-full flex items-center justify-center mb-6">
           <Heart className="w-12 h-12 text-red-500" />
         </div>
-        <h2 className="text-3xl font-bold mb-4">No favorites yet</h2>
+
+        <h2 className="text-3xl font-bold mb-4">
+          No favorites yet
+        </h2>
+
         <p className="text-muted-foreground text-lg mb-8 max-w-md">
-          Save your favorite meals to easily order them again later.
+          Save your favorite meals to easily
+          order them again later.
         </p>
+
         <Link href="/menu">
-          <Button size="lg">Browse Menu</Button>
+          <Button size="lg">
+            Browse Menu
+          </Button>
         </Link>
       </div>
     );
@@ -75,17 +136,23 @@ export default function Favorites() {
     <div className="max-w-7xl mx-auto px-6 py-12">
       <h1 className="text-3xl font-bold mb-8 text-foreground flex items-center gap-3">
         My Favorites
+
         <span className="text-lg font-normal text-muted-foreground bg-secondary px-3 py-1 rounded-full">
           {favorites.length}
         </span>
       </h1>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {favorites.map((product) => (
-          <ProductCard 
-            key={product.id} 
-            product={{...product, isFavorited: true}} 
-            onToggleFavorite={handleToggleFavorite}
+          <ProductCard
+            key={product.id}
+            product={{
+              ...product,
+              isFavorited: true,
+            }}
+            onToggleFavorite={
+              handleToggleFavorite
+            }
             onAddToCart={handleAddToCart}
           />
         ))}

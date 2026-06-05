@@ -8,7 +8,7 @@ import {
   favoritesTable,
 } from "@workspace/db";
 
-import { eq, and, ilike, desc } from "drizzle-orm";
+import { eq, and, ilike, desc, SQL } from "drizzle-orm";
 import { requireAdmin, optionalAuth, AuthRequest } from "../lib/auth.js";
 
 const router = Router();
@@ -34,7 +34,7 @@ router.get("/", optionalAuth, async (req: AuthRequest, res) => {
       .from(productsTable)
       .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id));
 
-    const conditions = [];
+    const conditions: SQL[] = [];
 
     if (categoryId) {
       conditions.push(eq(productsTable.categoryId, parseInt(String(categoryId))));

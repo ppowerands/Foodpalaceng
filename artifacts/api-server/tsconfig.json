@@ -1,13 +1,19 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
     "types": ["node"],
 
     "composite": false,
     "declaration": false,
-    "noEmit": false
+    "noEmit": false,
+
+    "rootDir": "../../"
   },
-  "include": ["src"],
-  "exclude": ["../../lib"]
+  "include": ["src", "../../lib/db/src"],
+  "references": [
+    {
+      "path": "../../lib/db"
+    }
+  ]
 }
