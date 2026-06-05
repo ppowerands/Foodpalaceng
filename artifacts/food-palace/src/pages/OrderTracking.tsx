@@ -39,17 +39,19 @@ export default function OrderTracking() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: order, isLoading } = useGetOrder(id as number, {
-    query: {
-      enabled: !!id,
-    },
-  });
+  const { data: order, isLoading } = useGetOrder(id as number);
 
   const confirmPaymentMutation = useConfirmPayment();
 
-  const handleConfirmPayment = () => {
-    if (!id) return;
+  if (!id) {
+    return (
+      <div className="p-8 text-center">
+        Invalid order
+      </div>
+    );
+  }
 
+  const handleConfirmPayment = () => {
     confirmPaymentMutation.mutate(
       { id },
       {
