@@ -58,7 +58,7 @@ export default function Cart() {
 
     updateMutation.mutate(
       {
-        id: itemId,
+        itemId: itemId,
         data: {
           quantity: newQuantity,
         },
@@ -76,7 +76,7 @@ export default function Cart() {
   const handleRemove = (itemId: number) => {
     removeMutation.mutate(
       {
-        id: itemId,
+        itemId: itemId,
       },
       {
         onSuccess: () => {
