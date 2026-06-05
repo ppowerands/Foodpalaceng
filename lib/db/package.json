@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./dist/index.ts",
-    "./schema": "./dist/schema/index.ts"
+    ".": "./dist/index.js",
+    "./schema": "./dist/schema/index.js"
   },
   "scripts": {
+    "build": "tsc -p tsconfig.json",
     "push": "drizzle-kit push --config ./drizzle.config.ts",
     "push-force": "drizzle-kit push --force --config ./drizzle.config.ts"
   },
@@ -20,6 +21,7 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/pg": "^8.20.0",
-    "drizzle-kit": "^0.31.10"
+    "drizzle-kit": "^0.31.10",
+    "typescript": "^5.4.5"
   }
 }
