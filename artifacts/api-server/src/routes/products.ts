@@ -343,6 +343,62 @@ router.post("/:id/variants", requireAdmin, async (req, res) => {
   }
 });
 
+router.patch("/:productId/variants/:variantId", requireAdmin, async (req, res) => {
+  try {
+    const productId = parseInt(String(req.params["productId"]));
+    const variantId = parseInt(String(req.params["variantId"]));
+    const { name, price, description } = req.body;
+
+    const updateData: Record<string, unknown> = {};
+
+    if (name !== undefined) updateData.name = name;
+    if (price !== undefined) updateData.price = String(price);
+    if (description !== undefined) updateData.description = description;
+
+    const [variant] = await db
+      .update(productVariantsTable)
+      .set(updateData)
+      .where(
+        and(
+          eq(productVariantsTable.id, variantId),
+          eq(productVariantsTable.productId, productId)
+        )
+      )
+      .returning();
+
+    if (!variant) {
+      return res.status(404).json({ error: "Variant not found" });
+    }
+
+    return res.json({
+      ...variant,
+      price: parseFloat(variant.price as unknown as string),
+    });
+  } catch {
+    return res.status(500).json({ error: "Failed to update variant" });
+  }
+});
+
+router.delete("/:productId/variants/:variantId", requireAdmin, async (req, res) => {
+  try {
+    const productId = parseInt(String(req.params["productId"]));
+    const variantId = parseInt(String(req.params["variantId"]));
+
+    await db
+      .delete(productVariantsTable)
+      .where(
+        and(
+          eq(productVariantsTable.id, variantId),
+          eq(productVariantsTable.productId, productId)
+        )
+      );
+
+    return res.status(204).send();
+  } catch {
+    return res.status(500).json({ error: "Failed to delete variant" });
+  }
+});
+
 router.get("/:id/addons", async (req, res) => {
   try {
     const id = parseInt(String(req.params["id"]));
@@ -384,6 +440,61 @@ router.post("/:id/addons", requireAdmin, async (req, res) => {
     });
   } catch {
     return res.status(500).json({ error: "Failed to create addon" });
+  }
+});
+
+router.patch("/:productId/addons/:addonId", requireAdmin, async (req, res) => {
+  try {
+    const productId = parseInt(String(req.params["productId"]));
+    const addonId = parseInt(String(req.params["addonId"]));
+    const { name, price } = req.body;
+
+    const updateData: Record<string, unknown> = {};
+
+    if (name !== undefined) updateData.name = name;
+    if (price !== undefined) updateData.price = String(price);
+
+    const [addon] = await db
+      .update(addonsTable)
+      .set(updateData)
+      .where(
+        and(
+          eq(addonsTable.id, addonId),
+          eq(addonsTable.productId, productId)
+        )
+      )
+      .returning();
+
+    if (!addon) {
+      return res.status(404).json({ error: "Addon not found" });
+    }
+
+    return res.json({
+      ...addon,
+      price: parseFloat(addon.price as unknown as string),
+    });
+  } catch {
+    return res.status(500).json({ error: "Failed to update addon" });
+  }
+});
+
+router.delete("/:productId/addons/:addonId", requireAdmin, async (req, res) => {
+  try {
+    const productId = parseInt(String(req.params["productId"]));
+    const addonId = parseInt(String(req.params["addonId"]));
+
+    await db
+      .delete(addonsTable)
+      .where(
+        and(
+          eq(addonsTable.id, addonId),
+          eq(addonsTable.productId, productId)
+        )
+      );
+
+    return res.status(204).send();
+  } catch {
+    return res.status(500).json({ error: "Failed to delete addon" });
   }
 });
 

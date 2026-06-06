@@ -64,9 +64,9 @@ export default function AdminOrders() {
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
 
-  const updateStatusMutation = useUpdateOrderStatus(0);
+  const updateStatusMutation = useUpdateOrderStatus();
 
-  const updatePaymentMutation = useUpdatePaymentStatus(0);
+  const updatePaymentMutation = useUpdatePaymentStatus();
 
   const handleStatusChange = (
     orderId: number,

@@ -41,6 +41,7 @@ export default function OrderTracking() {
 
   const { data: order, isLoading } = useGetOrder(id as number, {
     query: {
+      queryKey: getGetOrderQueryKey(id as number),
       enabled: !!id,
     },
   });

@@ -1,297 +1,1066 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  useListProducts,
-  useListCategories,
-  useAddToCart,
-  getGetCartQueryKey,
-  useAddFavorite,
-  useRemoveFavorite,
-  getListFavoritesQueryKey,
+  Addon,
+  Product,
+  ProductDetail,
+  ProductVariant,
+  getGetProductQueryKey,
   getListProductsQueryKey,
+  useCreateProduct,
+  useCreateProductAddon,
+  useCreateProductVariant,
+  useDeleteProduct,
+  useGetProduct,
+  useListCategories,
+  useListProducts,
+  useUpdateProduct,
 } from "@workspace/api-client-react";
 
-import { useQueryClient } from "@tanstack/react-query";
-import { ProductCard } from "@/components/ProductCard";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import {
+  Edit2,
+  ListPlus,
+  PackageOpen,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  Trash2,
+} from "lucide-react";
 
-export default function Menu() {
-  const [searchParams] = useState(
-    new URLSearchParams(window.location.search)
+type ProductFormState = {
+  name: string;
+  description: string;
+  categoryId: string;
+  basePrice: string;
+  imageUrl: string;
+  inStock: boolean;
+  isAvailable: boolean;
+  hasVariants: boolean;
+};
+
+type VariantFormState = {
+  id?: number;
+  name: string;
+  price: string;
+  description: string;
+};
+
+type AddonFormState = {
+  id?: number;
+  name: string;
+  price: string;
+};
+
+const emptyProductForm: ProductFormState = {
+  name: "",
+  description: "",
+  categoryId: "",
+  basePrice: "",
+  imageUrl: "",
+  inStock: true,
+  isAvailable: true,
+  hasVariants: false,
+};
+
+const emptyVariantForm: VariantFormState = {
+  name: "",
+  price: "",
+  description: "",
+};
+
+const emptyAddonForm: AddonFormState = {
+  name: "",
+  price: "",
+};
+
+function adminRequest<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const token = localStorage.getItem("food_palace_token");
+  const headers = new Headers(options.headers);
+
+  headers.set("Content-Type", "application/json");
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  return fetch(path, { ...options, headers }).then(async (response) => {
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error(message || response.statusText);
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
+    return response.json() as Promise<T>;
+  });
+}
+
+function productToForm(product: Product): ProductFormState {
+  return {
+    name: product.name,
+    description: product.description ?? "",
+    categoryId: String(product.categoryId),
+    basePrice: String(product.basePrice),
+    imageUrl: product.imageUrl ?? "",
+    inStock: product.inStock,
+    isAvailable: product.isAvailable,
+    hasVariants: product.hasVariants ?? false,
+  };
+}
+
+function toProductPayload(form: ProductFormState) {
+  return {
+    name: form.name.trim(),
+    description: form.description.trim() || undefined,
+    categoryId: Number(form.categoryId),
+    basePrice: Number(form.basePrice),
+    imageUrl: form.imageUrl.trim() || undefined,
+    inStock: form.inStock,
+    isAvailable: form.isAvailable,
+    hasVariants: form.hasVariants,
+  };
+}
+
+export default function AdminMenu() {
+  const [categoryId, setCategoryId] = useState<string>("all");
+  const [search, setSearch] = useState("");
+  const [productDialogOpen, setProductDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productForm, setProductForm] =
+    useState<ProductFormState>(emptyProductForm);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(
+    null
+  );
+  const [variantForm, setVariantForm] =
+    useState<VariantFormState>(emptyVariantForm);
+  const [addonForm, setAddonForm] = useState<AddonFormState>(emptyAddonForm);
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const productParams = useMemo(
+    () => ({
+      categoryId: categoryId === "all" ? undefined : Number(categoryId),
+      search: search.trim() || undefined,
+    }),
+    [categoryId, search]
   );
 
-  const initialCategoryId = searchParams.get("category")
-    ? Number(searchParams.get("category"))
-    : undefined;
+  const { data: categories } = useListCategories();
+  const { data: products, isLoading } = useListProducts(productParams);
 
-  const [activeCategory, setActiveCategory] = useState<number | undefined>(
-    initialCategoryId
+  const detailProductId = selectedProductId ?? 0;
+  const { data: productDetail, isLoading: loadingDetail } = useGetProduct(
+    detailProductId,
+    {
+      query: {
+        queryKey: getGetProductQueryKey(detailProductId),
+        enabled: selectedProductId !== null,
+      },
+    }
   );
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const createProductMutation = useCreateProduct();
+  const updateProductMutation = useUpdateProduct();
+  const deleteProductMutation = useDeleteProduct();
+  const createVariantMutation = useCreateProductVariant();
+  const createAddonMutation = useCreateProductAddon();
 
-  const { data: categories, isLoading: loadingCategories } =
-    useListCategories();
-
-  const { data: products, isLoading: loadingProducts } = useListProducts({
-    categoryId: activeCategory,
-    search: debouncedSearch || undefined,
+  const updateVariantMutation = useMutation({
+    mutationFn: ({
+      productId,
+      variantId,
+      data,
+    }: {
+      productId: number;
+      variantId: number;
+      data: Omit<VariantFormState, "id">;
+    }) =>
+      adminRequest<ProductVariant>(
+        `/api/products/${productId}/variants/${variantId}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            name: data.name,
+            price: Number(data.price),
+            description: data.description || undefined,
+          }),
+        }
+      ),
   });
 
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const deleteVariantMutation = useMutation({
+    mutationFn: ({
+      productId,
+      variantId,
+    }: {
+      productId: number;
+      variantId: number;
+    }) =>
+      adminRequest<void>(`/api/products/${productId}/variants/${variantId}`, {
+        method: "DELETE",
+      }),
+  });
 
-  const addToCartMutation = useAddToCart();
-  const addFavoriteMutation = useAddFavorite();
-  const removeFavoriteMutation = useRemoveFavorite();
+  const updateAddonMutation = useMutation({
+    mutationFn: ({
+      productId,
+      addonId,
+      data,
+    }: {
+      productId: number;
+      addonId: number;
+      data: Omit<AddonFormState, "id">;
+    }) =>
+      adminRequest<Addon>(`/api/products/${productId}/addons/${addonId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: data.name,
+          price: Number(data.price),
+        }),
+      }),
+  });
 
-  const handleSearchChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value;
+  const deleteAddonMutation = useMutation({
+    mutationFn: ({
+      productId,
+      addonId,
+    }: {
+      productId: number;
+      addonId: number;
+    }) =>
+      adminRequest<void>(`/api/products/${productId}/addons/${addonId}`, {
+        method: "DELETE",
+      }),
+  });
 
-    setSearchQuery(value);
-
-    setTimeout(() => {
-      setDebouncedSearch(value);
-    }, 500);
+  const refreshProducts = () => {
+    queryClient.invalidateQueries({
+      queryKey: getListProductsQueryKey(productParams),
+    });
   };
 
-  const handleAddToCart = (product: any) => {
-    if (product.hasVariants) {
-      setLocation(`/product/${product.id}`);
+  const refreshDetail = (productId: number) => {
+    queryClient.invalidateQueries({
+      queryKey: getGetProductQueryKey(productId),
+    });
+    refreshProducts();
+  };
+
+  const openCreateProduct = () => {
+    setEditingProduct(null);
+    setProductForm({
+      ...emptyProductForm,
+      categoryId: categories?.[0]?.id ? String(categories[0].id) : "",
+    });
+    setProductDialogOpen(true);
+  };
+
+  const openEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setProductForm(productToForm(product));
+    setProductDialogOpen(true);
+  };
+
+  const handleProductSubmit = (event: FormEvent) => {
+    event.preventDefault();
+
+    const payload = toProductPayload(productForm);
+
+    if (editingProduct) {
+      updateProductMutation.mutate(
+        { id: editingProduct.id, data: payload },
+        {
+          onSuccess: () => {
+            setProductDialogOpen(false);
+            refreshProducts();
+            toast({ title: "Product updated" });
+          },
+        }
+      );
       return;
     }
 
-    addToCartMutation.mutate(
+    createProductMutation.mutate(
+      { data: payload },
       {
+        onSuccess: () => {
+          setProductDialogOpen(false);
+          refreshProducts();
+          toast({ title: "Product created" });
+        },
+      }
+    );
+  };
+
+  const handleDeleteProduct = (product: Product) => {
+    if (!confirm(`Delete ${product.name}?`)) return;
+
+    deleteProductMutation.mutate(
+      { id: product.id },
+      {
+        onSuccess: () => {
+          refreshProducts();
+          toast({ title: "Product deleted" });
+        },
+      }
+    );
+  };
+
+  const handleToggleProduct = (
+    product: Product,
+    field: "inStock" | "isAvailable"
+  ) => {
+    updateProductMutation.mutate(
+      {
+        id: product.id,
         data: {
-          productId: product.id,
-          quantity: 1,
+          [field]: !product[field],
         },
       },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: getGetCartQueryKey(),
-          });
-
-          toast({
-            title: "Added to cart",
-            description: `${product.name} has been added to your cart.`,
-          });
-        },
-
-        onError: () => {
-          toast({
-            title: "Please login",
-            description:
-              "You need to be logged in to add items to cart.",
-            variant: "destructive",
-          });
-
-          setLocation("/login");
+          refreshProducts();
+          toast({ title: "Product status updated" });
         },
       }
     );
   };
 
-  const handleToggleFavorite = (
-    productId: number,
-    isFavorited: boolean
-  ) => {
-    const mutation = isFavorited
-      ? removeFavoriteMutation
-      : addFavoriteMutation;
+  const openOptions = (product: Product) => {
+    setSelectedProductId(product.id);
+    setVariantForm(emptyVariantForm);
+    setAddonForm(emptyAddonForm);
+  };
 
-    mutation.mutate(
-      { productId },
+  const handleVariantSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    if (!selectedProductId) return;
+
+    const payload = {
+      name: variantForm.name.trim(),
+      price: variantForm.price,
+      description: variantForm.description.trim(),
+    };
+
+    if (variantForm.id) {
+      updateVariantMutation.mutate(
+        {
+          productId: selectedProductId,
+          variantId: variantForm.id,
+          data: payload,
+        },
+        {
+          onSuccess: () => {
+            setVariantForm(emptyVariantForm);
+            refreshDetail(selectedProductId);
+            toast({ title: "Variant updated" });
+          },
+        }
+      );
+      return;
+    }
+
+    createVariantMutation.mutate(
+      {
+        id: selectedProductId,
+        data: {
+          name: payload.name,
+          price: Number(payload.price),
+          description: payload.description || undefined,
+        },
+      },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: getListProductsQueryKey({
-              categoryId: activeCategory,
-              search: debouncedSearch || undefined,
-            }),
-          });
-
-          queryClient.invalidateQueries({
-            queryKey: getListFavoritesQueryKey(),
-          });
-
-          toast({
-            title: isFavorited
-              ? "Removed from favorites"
-              : "Added to favorites",
-          });
-        },
-
-        onError: () => {
-          toast({
-            title: "Please login",
-            description:
-              "You need to be logged in to save favorites.",
-            variant: "destructive",
-          });
+          setVariantForm(emptyVariantForm);
+          refreshDetail(selectedProductId);
+          toast({ title: "Variant added" });
         },
       }
     );
   };
 
+  const handleAddonSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    if (!selectedProductId) return;
+
+    const payload = {
+      name: addonForm.name.trim(),
+      price: addonForm.price,
+    };
+
+    if (addonForm.id) {
+      updateAddonMutation.mutate(
+        {
+          productId: selectedProductId,
+          addonId: addonForm.id,
+          data: payload,
+        },
+        {
+          onSuccess: () => {
+            setAddonForm(emptyAddonForm);
+            refreshDetail(selectedProductId);
+            toast({ title: "Addon updated" });
+          },
+        }
+      );
+      return;
+    }
+
+    createAddonMutation.mutate(
+      {
+        id: selectedProductId,
+        data: {
+          name: payload.name,
+          price: Number(payload.price),
+        },
+      },
+      {
+        onSuccess: () => {
+          setAddonForm(emptyAddonForm);
+          refreshDetail(selectedProductId);
+          toast({ title: "Addon added" });
+        },
+      }
+    );
+  };
+
+  useEffect(() => {
+    if (!productDialogOpen) {
+      setEditingProduct(null);
+    }
+  }, [productDialogOpen]);
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="bg-slate-900 pt-10 pb-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-bold text-white mb-6">
-            Our Menu
-          </h1>
-
-          <div className="relative max-w-2xl">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-
-            <Input
-              placeholder="Search for Jollof, Shawarma, Drinks..."
-              className="pl-10 h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-400 text-lg rounded-xl focus-visible:ring-primary"
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Menu Management</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Edit customer menu items, availability, variants, and addons.
+          </p>
         </div>
+
+        <Button onClick={openCreateProduct}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Product
+        </Button>
       </div>
 
-      <div className="max-w-7xl mx-auto w-full px-6 -mt-10 mb-12">
-        <div className="bg-card border border-border rounded-xl shadow-sm p-2 flex items-center gap-2">
-          <Button
-            variant={
-              activeCategory === undefined ? "default" : "ghost"
-            }
-            className="rounded-lg whitespace-nowrap"
-            onClick={() => setActiveCategory(undefined)}
-          >
-            All Menu
-          </Button>
+      <div className="grid gap-3 rounded-lg border bg-card p-4 shadow-sm md:grid-cols-[1fr_220px]">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search products"
+            className="pl-9"
+          />
+        </div>
 
-          <div className="w-px h-6 bg-border mx-2" />
+        <Select value={categoryId} onValueChange={setCategoryId}>
+          <SelectTrigger>
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All categories</SelectItem>
+            {categories?.map((category) => (
+              <SelectItem key={category.id} value={String(category.id)}>
+                {category.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-          <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex w-max space-x-2 p-1">
-              {loadingCategories ? (
-                Array(5)
-                  .fill(0)
-                  .map((_, i) => (
-                    <Skeleton
-                      key={i}
-                      className="h-10 w-24 rounded-lg"
-                    />
-                  ))
-              ) : (
-                categories?.map((cat) => (
-                  <Button
-                    key={cat.id}
-                    variant={
-                      activeCategory === cat.id
-                        ? "default"
-                        : "ghost"
-                    }
-                    className="rounded-lg"
-                    onClick={() => setActiveCategory(cat.id)}
-                  >
-                    {cat.name}
-                  </Button>
-                ))
-              )}
+      <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-16">Image</TableHead>
+              <TableHead>Product</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <TableRow key={index}>
+                  <TableCell colSpan={6}>
+                    <Skeleton className="h-12 w-full" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : !products?.length ? (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className="py-12 text-center text-muted-foreground"
+                >
+                  <PackageOpen className="mx-auto mb-3 h-8 w-8 opacity-50" />
+                  No products found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              products.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell>
+                    <div className="h-12 w-12 overflow-hidden rounded-md bg-muted">
+                      {product.imageUrl ? (
+                        <img
+                          src={product.imageUrl}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : null}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-medium">{product.name}</div>
+                    <div className="line-clamp-1 max-w-md text-xs text-muted-foreground">
+                      {product.description || "No description"}
+                    </div>
+                  </TableCell>
+                  <TableCell>{product.categoryName}</TableCell>
+                  <TableCell>{formatCurrency(product.basePrice)}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant={product.isAvailable ? "default" : "outline"}
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() =>
+                          handleToggleProduct(product, "isAvailable")
+                        }
+                      >
+                        {product.isAvailable ? "Visible" : "Hidden"}
+                      </Button>
+                      <Button
+                        variant={product.inStock ? "secondary" : "outline"}
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => handleToggleProduct(product, "inStock")}
+                      >
+                        {product.inStock ? "In stock" : "Out"}
+                      </Button>
+                      {product.hasVariants ? (
+                        <Badge variant="outline">Variants</Badge>
+                      ) : null}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => openOptions(product)}
+                      >
+                        <SlidersHorizontal className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => openEditProduct(product)}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive"
+                        onClick={() => handleDeleteProduct(product)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingProduct ? "Edit Product" : "Add Product"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <form className="grid gap-4" onSubmit={handleProductSubmit}>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Name">
+                <Input
+                  required
+                  value={productForm.name}
+                  onChange={(event) =>
+                    setProductForm((current) => ({
+                      ...current,
+                      name: event.target.value,
+                    }))
+                  }
+                />
+              </Field>
+
+              <Field label="Category">
+                <Select
+                  required
+                  value={productForm.categoryId}
+                  onValueChange={(value) =>
+                    setProductForm((current) => ({
+                      ...current,
+                      categoryId: value,
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories?.map((category) => (
+                      <SelectItem
+                        key={category.id}
+                        value={String(category.id)}
+                      >
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
             </div>
 
-            <ScrollBar
-              orientation="horizontal"
-              className="invisible"
+            <Field label="Description">
+              <Textarea
+                value={productForm.description}
+                onChange={(event) =>
+                  setProductForm((current) => ({
+                    ...current,
+                    description: event.target.value,
+                  }))
+                }
+              />
+            </Field>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Base price">
+                <Input
+                  required
+                  min="0"
+                  step="0.01"
+                  type="number"
+                  value={productForm.basePrice}
+                  onChange={(event) =>
+                    setProductForm((current) => ({
+                      ...current,
+                      basePrice: event.target.value,
+                    }))
+                  }
+                />
+              </Field>
+
+              <Field label="Image URL">
+                <Input
+                  value={productForm.imageUrl}
+                  onChange={(event) =>
+                    setProductForm((current) => ({
+                      ...current,
+                      imageUrl: event.target.value,
+                    }))
+                  }
+                />
+              </Field>
+            </div>
+
+            <div className="grid gap-3 rounded-md border p-3 md:grid-cols-3">
+              <CheckField
+                label="Visible to customers"
+                checked={productForm.isAvailable}
+                onCheckedChange={(checked) =>
+                  setProductForm((current) => ({
+                    ...current,
+                    isAvailable: checked,
+                  }))
+                }
+              />
+              <CheckField
+                label="In stock"
+                checked={productForm.inStock}
+                onCheckedChange={(checked) =>
+                  setProductForm((current) => ({
+                    ...current,
+                    inStock: checked,
+                  }))
+                }
+              />
+              <CheckField
+                label="Has variants"
+                checked={productForm.hasVariants}
+                onCheckedChange={(checked) =>
+                  setProductForm((current) => ({
+                    ...current,
+                    hasVariants: checked,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setProductDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  createProductMutation.isPending ||
+                  updateProductMutation.isPending
+                }
+              >
+                {editingProduct ? "Save Product" : "Create Product"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={selectedProductId !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedProductId(null);
+        }}
+      >
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {productDetail?.name ?? "Product Options"}
+            </DialogTitle>
+          </DialogHeader>
+
+          {loadingDetail ? (
+            <Skeleton className="h-80 w-full" />
+          ) : productDetail ? (
+            <ProductOptions
+              product={productDetail}
+              variantForm={variantForm}
+              addonForm={addonForm}
+              setVariantForm={setVariantForm}
+              setAddonForm={setAddonForm}
+              onVariantSubmit={handleVariantSubmit}
+              onAddonSubmit={handleAddonSubmit}
+              onDeleteVariant={(variantId) => {
+                if (!confirm("Delete this variant?")) return;
+                deleteVariantMutation.mutate(
+                  { productId: productDetail.id, variantId },
+                  {
+                    onSuccess: () => {
+                      refreshDetail(productDetail.id);
+                      toast({ title: "Variant deleted" });
+                    },
+                  }
+                );
+              }}
+              onDeleteAddon={(addonId) => {
+                if (!confirm("Delete this addon?")) return;
+                deleteAddonMutation.mutate(
+                  { productId: productDetail.id, addonId },
+                  {
+                    onSuccess: () => {
+                      refreshDetail(productDetail.id);
+                      toast({ title: "Addon deleted" });
+                    },
+                  }
+                );
+              }}
             />
-          </ScrollArea>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function ProductOptions({
+  product,
+  variantForm,
+  addonForm,
+  setVariantForm,
+  setAddonForm,
+  onVariantSubmit,
+  onAddonSubmit,
+  onDeleteVariant,
+  onDeleteAddon,
+}: {
+  product: ProductDetail;
+  variantForm: VariantFormState;
+  addonForm: AddonFormState;
+  setVariantForm: (form: VariantFormState) => void;
+  setAddonForm: (form: AddonFormState) => void;
+  onVariantSubmit: (event: FormEvent) => void;
+  onAddonSubmit: (event: FormEvent) => void;
+  onDeleteVariant: (id: number) => void;
+  onDeleteAddon: (id: number) => void;
+}) {
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <section className="space-y-4 rounded-lg border p-4">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="font-semibold">Variants</h3>
+          <Badge variant="secondary">{product.variants?.length ?? 0}</Badge>
+        </div>
+
+        <form className="grid gap-3" onSubmit={onVariantSubmit}>
+          <Input
+            required
+            placeholder="Variant name"
+            value={variantForm.name}
+            onChange={(event) =>
+              setVariantForm({ ...variantForm, name: event.target.value })
+            }
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              required
+              min="0"
+              step="0.01"
+              type="number"
+              placeholder="Price"
+              value={variantForm.price}
+              onChange={(event) =>
+                setVariantForm({ ...variantForm, price: event.target.value })
+              }
+            />
+            <Input
+              placeholder="Short description"
+              value={variantForm.description}
+              onChange={(event) =>
+                setVariantForm({
+                  ...variantForm,
+                  description: event.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            {variantForm.id ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setVariantForm(emptyVariantForm)}
+              >
+                Cancel
+              </Button>
+            ) : null}
+            <Button type="submit">
+              <ListPlus className="mr-2 h-4 w-4" />
+              {variantForm.id ? "Save Variant" : "Add Variant"}
+            </Button>
+          </div>
+        </form>
+
+        <div className="space-y-2">
+          {product.variants?.map((variant) => (
+            <OptionRow
+              key={variant.id}
+              name={variant.name}
+              detail={variant.description ?? ""}
+              price={variant.price}
+              onEdit={() =>
+                setVariantForm({
+                  id: variant.id,
+                  name: variant.name,
+                  price: String(variant.price),
+                  description: variant.description ?? "",
+                })
+              }
+              onDelete={() => onDeleteVariant(variant.id)}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4 rounded-lg border p-4">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="font-semibold">Addons</h3>
+          <Badge variant="secondary">{product.addons?.length ?? 0}</Badge>
+        </div>
+
+        <form className="grid gap-3" onSubmit={onAddonSubmit}>
+          <Input
+            required
+            placeholder="Addon name"
+            value={addonForm.name}
+            onChange={(event) =>
+              setAddonForm({ ...addonForm, name: event.target.value })
+            }
+          />
+          <Input
+            required
+            min="0"
+            step="0.01"
+            type="number"
+            placeholder="Price"
+            value={addonForm.price}
+            onChange={(event) =>
+              setAddonForm({ ...addonForm, price: event.target.value })
+            }
+          />
+          <div className="flex justify-end gap-2">
+            {addonForm.id ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAddonForm(emptyAddonForm)}
+              >
+                Cancel
+              </Button>
+            ) : null}
+            <Button type="submit">
+              <ListPlus className="mr-2 h-4 w-4" />
+              {addonForm.id ? "Save Addon" : "Add Addon"}
+            </Button>
+          </div>
+        </form>
+
+        <div className="space-y-2">
+          {product.addons?.map((addon) => (
+            <OptionRow
+              key={addon.id}
+              name={addon.name}
+              price={addon.price}
+              onEdit={() =>
+                setAddonForm({
+                  id: addon.id,
+                  name: addon.name,
+                  price: String(addon.price),
+                })
+              }
+              onDelete={() => onDeleteAddon(addon.id)}
+            />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function OptionRow({
+  name,
+  detail,
+  price,
+  onEdit,
+  onDelete,
+}: {
+  name: string;
+  detail?: string;
+  price: number;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-md border bg-background p-3">
+      <div>
+        <div className="font-medium">{name}</div>
+        {detail ? (
+          <div className="text-xs text-muted-foreground">{detail}</div>
+        ) : null}
+        <div className="text-sm text-muted-foreground">
+          {formatCurrency(price)}
         </div>
       </div>
-
-      <div className="max-w-7xl mx-auto w-full px-6 pb-24">
-        {loadingProducts ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {Array(8)
-              .fill(0)
-              .map((_, i) => (
-                <Skeleton
-                  key={i}
-                  className="h-[350px] rounded-xl"
-                />
-              ))}
-          </div>
-        ) : products?.length === 0 ? (
-          <div className="text-center py-20 bg-muted/30 rounded-2xl border border-dashed">
-            <UtensilsCrossed className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-
-            <h3 className="text-xl font-bold text-foreground">
-              No dishes found
-            </h3>
-
-            <p className="text-muted-foreground mt-2">
-              Try adjusting your search or category filter.
-            </p>
-
-            {(activeCategory !== undefined ||
-              debouncedSearch) && (
-              <Button
-                variant="outline"
-                className="mt-6"
-                onClick={() => {
-                  setActiveCategory(undefined);
-                  setSearchQuery("");
-                  setDebouncedSearch("");
-                }}
-              >
-                Clear all filters
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products?.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={handleAddToCart}
-                onToggleFavorite={handleToggleFavorite}
-              />
-            ))}
-          </div>
-        )}
+      <div className="flex gap-1">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+          <Edit2 className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-destructive"
+          onClick={onDelete}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
 }
 
-function UtensilsCrossed(props: any) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8" />
-      <path d="M15 15 3.3 2.8a2 2 0 0 0-2.8 0 2 2 0 0 0 0 2.8L12 17" />
-      <path d="m20 18-8-8" />
-      <path d="m6 8-4-4" />
-      <path d="m14.5 9.5 3 3" />
-    </svg>
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      {children}
+    </div>
+  );
+}
+
+function CheckField({
+  label,
+  checked,
+  onCheckedChange,
+}: {
+  label: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-sm font-medium">
+      <Checkbox
+        checked={checked}
+        onCheckedChange={(value) => onCheckedChange(value === true)}
+      />
+      {label}
+    </label>
   );
 }

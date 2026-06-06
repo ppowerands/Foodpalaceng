@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   useGetPublicSettings,
   useGetCart,
+  getGetCartQueryKey,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -28,8 +29,9 @@ export function MainLayout({
 
   const { data: settings } = useGetPublicSettings();
 
-  const { data: cart } = useGetCart(undefined, {
+  const { data: cart } = useGetCart({
     query: {
+      queryKey: getGetCartQueryKey(),
       enabled: isLoggedIn,
     },
   });
