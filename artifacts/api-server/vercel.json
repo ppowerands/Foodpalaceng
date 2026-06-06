@@ -1,8 +1,14 @@
 {
+  "buildCommand": "pnpm run build",
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/api/index"
     }
-  ]
+  ],
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "dist/**"
+    }
+  }
 }

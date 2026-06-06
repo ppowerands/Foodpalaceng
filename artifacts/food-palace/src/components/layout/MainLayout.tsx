@@ -41,7 +41,7 @@ export function MainLayout({
     setLocation("/");
   };
 
-  const cartCount = cart?.itemCount || 0;
+  const cartCount = isLoggedIn ? (cart?.itemCount || 0) : 0;
 
   const navLinks = [
     { href: "/", label: "Home" },

@@ -1,9 +1,9 @@
 import { pgTable, serial, integer, text, numeric, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { usersTable } from "./users";
-import { productsTable } from "./products";
-import { productVariantsTable } from "./products";
+import { usersTable } from "./users.js";
+import { productsTable } from "./products.js";
+import { productVariantsTable } from "./products.js";
 
 export const cartItemsTable = pgTable("cart_items", {
   id: serial("id").primaryKey(),

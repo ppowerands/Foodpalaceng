@@ -31,7 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 
 import { format } from "date-fns";
 
-function getStatusColor(status: string) {
+export function getStatusColor(status: string) {
   switch (status) {
     case "pending":
       return "bg-yellow-100 text-yellow-800";
@@ -50,6 +50,20 @@ function getStatusColor(status: string) {
 
     default:
       return "bg-gray-100 text-gray-800";
+  }
+}
+
+export function getStatusLabel(status: string) {
+  switch (status) {
+    case "pending": return "Pending";
+    case "preparing": return "Preparing";
+    case "out_for_delivery": return "Out for Delivery";
+    case "delivered": return "Delivered";
+    case "cancelled": return "Cancelled";
+    case "confirmed": return "Confirmed";
+    case "awaiting_confirmation": return "Awaiting Confirmation";
+    case "rejected": return "Rejected";
+    default: return status;
   }
 }
 

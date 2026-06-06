@@ -48,9 +48,15 @@ export default function OrderTracking() {
 
   const confirmPaymentMutation = useConfirmPayment();
 
-  const handleConfirmPayment = () => {
-    if (!id) return;
+  if (!id) {
+    return (
+      <div className="p-8 text-center">
+        Invalid order
+      </div>
+    );
+  }
 
+  const handleConfirmPayment = () => {
     confirmPaymentMutation.mutate(
       { id },
       {
